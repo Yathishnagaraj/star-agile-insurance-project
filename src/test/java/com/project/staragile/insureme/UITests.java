@@ -11,14 +11,19 @@ public class UITests {
 
     @BeforeClass
     public void setup() {
+        System.setProperty("webdriver.chrome.driver", "/path/to/chromedriver");
+
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless", "--no-sandbox", "--disable-dev-shm-usage");
+        options.addArguments("--headless");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+
         driver = new ChromeDriver(options);
     }
 
     @Test
     public void testHomepageTitle() {
-        driver.get("http://<your-app-test-url>"); // Replace with your test app URL
+        driver.get("http://your-app-test-url");
         String title = driver.getTitle();
         assertTrue(title.contains("InsureMe"), "Homepage title check failed.");
     }

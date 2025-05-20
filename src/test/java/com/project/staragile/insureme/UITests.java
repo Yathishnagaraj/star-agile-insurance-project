@@ -5,13 +5,17 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.testng.annotations.*;
 import static org.testng.Assert.*;
+import io.github.bonigarcia.wdm.WebDriverManager;
+
+import java.time.Duration;
 
 public class UITests {
     WebDriver driver;
 
     @BeforeClass
-    public void setup() {
-        System.setProperty("webdriver.chrome.driver", "/usr/local/bin/chromedriver");
+    @Parameters({"appUrl"})
+    public void setup(@Optional("http://your-app-test-url") String appUrl) {
+        WebDriverManager.chromedriver().setup();
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");
@@ -19,13 +23,15 @@ public class UITests {
         options.addArguments("--disable-dev-shm-usage");
 
         driver = new ChromeDriver(options);
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
     }
 
     @Test
-    public void testHomepageTitle() {
-        driver.get("http://your-app-test-url");
+    @Parameters({"appUrl"})
+    public void testHomepageTitle(@Optional("http://your-app-test-url") String appUrl) {
+        driver.get(appUrl);
         String title = driver.getTitle();
-        assertTrue(title.contains("InsureMe"), "Homepage title check failed.");
+        assertTrue(title.contains("InsureMe"), "Homepage title does not contain 'InsureMe'. Actual: " + title);
     }
 
     @AfterClass

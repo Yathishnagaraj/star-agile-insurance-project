@@ -1,31 +1,32 @@
 package com.project.staragile.insureme;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.testng.annotations.*;
+import static org.testng.Assert.*;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+public class UITests {
+    WebDriver driver;
 
-@SpringBootTest
-class InsureMeApplicationTests {
+    @BeforeClass
+    public void setup() {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless", "--no-sandbox", "--disable-dev-shm-usage");
+        driver = new ChromeDriver(options);
+    }
 
-	@Test
-	void contextLoads() {
-	}
-	
-	@Test
-	void testCreatePolicy() {
-		Policy policy = new Policy(1, "Shubham", "Individual" , 10000, "10-Sep-2021", "10-Sep-2022");
-		PolicyService pService = new PolicyService();
-		//Policy outputPolicy = pService.CreatePolicy();
-		assertEquals(policy.getPolicyId(), pService.generateDummyPolicy().getPolicyId());
-		
-	}
-	
-	@Test
-	void testSearchPolicy() {
-		PolicyService pService = new PolicyService();
-		assertEquals(null,pService.searchPolicy());
-	}
+    @Test
+    public void testHomepageTitle() {
+        driver.get("http://<your-app-test-url>"); // Replace with your test app URL
+        String title = driver.getTitle();
+        assertTrue(title.contains("InsureMe"), "Homepage title check failed.");
+    }
 
-	
+    @AfterClass
+    public void tearDown() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
 }

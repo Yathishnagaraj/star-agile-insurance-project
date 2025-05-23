@@ -1,5 +1,5 @@
-FROM openjdk:21
+FROM openjdk:21-slim
 WORKDIR /app
-COPY target/insure-me-1.0.jar /app.jar
+COPY target/insure-me-1.0.jar app.jar
 EXPOSE 9095
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

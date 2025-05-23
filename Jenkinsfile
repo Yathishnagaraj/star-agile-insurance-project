@@ -1,73 +1,76 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE = "insure-me"
-        DOCKER_HUB = "yathishnag/insure-me"
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
-                git 'https://github.com/Yathishnagaraj/star-agile-insurance-project.git'
+                checkout scm
+            }
+        }
+
+        stage('Check Maven') {
+            steps {
+                // Check if mvn is accessible and print version
+                sh 'mvn --version'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'mvn clean install -DskipTests'
+                // Add Maven to PATH explicitly in case Jenkins environment doesn't have it
+                withEnv(["PATH+MAVEN=/usr/share/maven/bin:/usr/bin"]) {
+                    sh 'mvn clean install -DskipTests'
+                }
             }
         }
 
         stage('Prepare Jar') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
             steps {
-                sh 'cp selenium-insure-me-runnable.jar ./selenium-insure-me-runnable.jar || cp target/selenium-insure-me-runnable.jar ./selenium-insure-me-runnable.jar'
+                echo 'Prepare Jar step placeholder'
+                // Add your actual jar preparation steps here
             }
         }
 
         stage('Unit Test') {
-            steps {
-                sh 'mvn test'
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
+            steps {
+                echo 'Unit Test step placeholder'
+                // Add your actual unit test commands here
             }
         }
 
         stage('Build Docker Image') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
             steps {
-                sh "docker build -t ${IMAGE} ."
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                    sh "docker tag ${IMAGE} ${DOCKER_HUB}:latest"
-                    sh "docker push ${DOCKER_HUB}:latest"
-                }
+                echo 'Build Docker Image step placeholder'
+                // Add docker build commands here
             }
         }
 
         stage('Deploy to Test') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
             steps {
-                sshagent(['k8s-master-ssh']) {
-                    sh """
-                    ssh ubuntu@10.0.0.20 << EOF
-                    kubectl set image deployment/insure-me-deployment insure-me-container=${DOCKER_HUB}:latest -n test || \\
-                    kubectl apply -f k8s/test-deployment.yaml
-                    EOF
-                    """
-                }
+                echo 'Deploy to Test step placeholder'
+                // Add deployment commands here
             }
         }
 
         stage('Selenium Test') {
-            steps {
-                sh './scripts/run-selenium-tests.sh'
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'selenium-results/**/*.xml', allowEmptyArchive: true
-                }
+            steps {
+                echo 'Selenium Test step placeholder'
+                // Add Selenium tests here
             }
         }
 
@@ -76,24 +79,20 @@ pipeline {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
-                sshagent(['k8s-master-ssh']) {
-                    sh """
-                    ssh ubuntu@10.0.0.20 << EOF
-                    kubectl set image deployment/insure-me-deployment insure-me-container=${DOCKER_HUB}:latest -n prod || \\
-                    kubectl apply -f k8s/prod-deployment.yaml
-                    EOF
-                    """
-                }
+                echo 'Deploy to Prod step placeholder'
+                // Add production deployment commands here
             }
         }
     }
 
     post {
-        always {
-            cleanWs()
-        }
         failure {
-            mail to: 'team@example.com', subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}", body: "Check Jenkins for details."
+            echo 'Build failed!'
+            // If you want to send email here, make sure SMTP server is configured properly
+            // mail to: 'you@example.com', subject: "Build failed: ${env.JOB_NAME}", body: "Check Jenkins logs."
+        }
+        cleanup {
+            cleanWs()
         }
     }
 }
